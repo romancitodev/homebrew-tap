@@ -1,0 +1,7 @@
+[[scopes]]
+name = "workflow"
+description = "the workflows of the repo"
+
+[git]
+skip_preview = false
+skip_emojis = false

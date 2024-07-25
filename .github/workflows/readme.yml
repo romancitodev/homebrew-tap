@@ -1,0 +1,37 @@
+
+name: Generate README for homebrew tap
+
+permissions:
+  contents: write
+
+on:
+  workflow_dispatch:
+  push:
+
+jobs:
+  build:
+    name: Build and deploy new README
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build
+        run: |
+          echo -e "## Romancitodev homebrew tap packages\n\nThis repository contains formulas for installing axo's projects using [Homebrew](https://brew.sh) on Mac.\n## Homebrew Packages\n">README.md
+          for file in ./Formula/*.rb; do
+            [ -e "$file" ] || continue
+            name=$(grep 'bin.install "' $file | sed 's/bin.install "//g;s/"$//g;s/^[ \\t]*//;')
+            version=$(grep 'version "' $file | sed 's/version "//g;s/"$//g;s/^[ \\t]*//;')
+            desc=$(grep 'desc "' $file | sed 's/desc "//g;s/"$//g;s/^[ \\t]*//;')
+            repo=$(grep 'homepage "' $file | sed 's/homepage "//g;s/"$//g;s/^[ \\t]*//;')
+            echo -e "---\n### ${name} - ${version}\n${desc}\n> [!NOTE]\n> You can check the proyect [here](${repo})\n\`\`\`bash\nbrew install romancitodev/homebrew-tap/${name}\n\`\`\`\n" >>README.md
+          done
+      - name: Deploy
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_USER: "romancitodev"
+          GITHUB_EMAIL: "84428770+romancitodev@users.noreply.github.com"
+        run: |
+          git config --global user.name "${GITHUB_USER}"
+          git config --global user.email "${GITHUB_EMAIL}"
+          git add -A && git commit -m "chore: update readme"
+          git push origin main
